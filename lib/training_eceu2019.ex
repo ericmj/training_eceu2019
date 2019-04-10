@@ -2,18 +2,35 @@ defmodule ChatClient do
   def start() do
     {hostname, port} = get_address()
     {:ok, socket} = :gen_tcp.connect(hostname, port, mode: :binary, active: true)
+    nickname = IO.gets("Nickname: ") |> String.trim()
 
-    loop(socket)
+    spawn_gets_process(nickname)
+
+    loop(socket, nickname)
   end
 
-  defp loop(socket) do
+  defp spawn_gets_process(nickname) do
+    parent = self()
+
+    spawn(fn ->
+      message = String.trim(IO.gets("#{nickname}: "))
+      send(parent, {:gets, message})
+    end)
+  end
+
+  defp loop(socket, nickname) do
     receive do
+      {:gets, message} ->
+        IO.puts("#{nickname}: #{message}")
+        spawn_gets_process(nickname)
+        loop(socket, nickname)
+
       {:tcp, ^socket, data} ->
         data
         |> decode_packet()
         |> handle_message()
 
-        loop(socket)
+        loop(socket, nickname)
 
       {:tcp_closed, ^socket} ->
         raise "TCP connection was closed"
