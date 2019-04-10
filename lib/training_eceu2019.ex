@@ -9,7 +9,10 @@ defmodule ChatClient do
   defp loop(socket) do
     receive do
       {:tcp, ^socket, data} ->
-        handle_data(data)
+        data
+        |> decode_packet()
+        |> handle_message()
+
         loop(socket)
 
       {:tcp_closed, ^socket} ->
@@ -20,9 +23,20 @@ defmodule ChatClient do
     end
   end
 
-  defp handle_data(<<packet_size::size(16), packet::binary-size(packet_size)>>) do
-    message = :erlang.binary_to_term(packet)
-    IO.inspect(message)
+  defp handle_message(%{kind: :welcome, users_online: num_users}) do
+    IO.puts("Welcome! There are #{num_users} users online.")
+  end
+
+  defp handle_message(%{kind: :broadcast, nickname: nickname, message: message}) do
+    IO.puts("#{nickname}: #{message}")
+  end
+
+  defp handle_message(unknown_message) do
+    IO.puts("Unknown message #{inspect(unknown_message)}")
+  end
+
+  defp decode_packet(<<packet_size::size(16), packet::binary-size(packet_size)>>) do
+    :erlang.binary_to_term(packet)
   end
 
   defp get_address() do
