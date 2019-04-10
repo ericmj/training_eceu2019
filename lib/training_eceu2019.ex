@@ -21,7 +21,9 @@ defmodule ChatClient do
   defp loop(socket, nickname) do
     receive do
       {:gets, message} ->
-        IO.puts("#{nickname}: #{message}")
+        payload = %{kind: :broadcast, nickname: nickname, message: message}
+        :gen_tcp.send(socket, encode_packet(payload))
+
         spawn_gets_process(nickname)
         loop(socket, nickname)
 
@@ -54,6 +56,12 @@ defmodule ChatClient do
 
   defp decode_packet(<<packet_size::size(16), packet::binary-size(packet_size)>>) do
     :erlang.binary_to_term(packet)
+  end
+
+  defp encode_packet(term) do
+    encoded = :erlang.term_to_binary(term)
+    packet_size = byte_size(encoded)
+    <<packet_size::size(16), encoded::binary>>
   end
 
   defp get_address() do
