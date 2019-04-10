@@ -1,18 +1,6 @@
-defmodule TrainingEceu2019 do
-  @moduledoc """
-  Documentation for TrainingEceu2019.
-  """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> TrainingEceu2019.hello()
-      :world
-
-  """
-  def hello do
-    IO.puts("hello")
+defmodule ChatClient do
+  def start() do
+    address = String.trim(IO.gets("Server address: "))
+    IO.inspect(address)
   end
 end
