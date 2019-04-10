@@ -9,7 +9,7 @@ defmodule ChatClient do
   defp loop(socket) do
     receive do
       {:tcp, ^socket, data} ->
-        IO.inspect(data)
+        handle_data(data)
         loop(socket)
 
       {:tcp_closed, ^socket} ->
@@ -18,6 +18,11 @@ defmodule ChatClient do
       {:tcp_error, ^socket, reason} ->
         raise "TCP connection error: #{:inet.format_error(reason)}"
     end
+  end
+
+  defp handle_data(<<packet_size::size(16), packet::binary-size(packet_size)>>) do
+    message = :erlang.binary_to_term(packet)
+    IO.inspect(message)
   end
 
   defp get_address() do
